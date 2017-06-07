@@ -20,10 +20,15 @@ class PokemonCard extends Component {
 class App extends Component {
   render() {
     return (
-      <div style={{ display: 'flex', flexWrap: 'wrap'}}>
-        {data.pokemon_species.map((species) =>
-          <PokemonCard key={species.name} metadata={pokemon[species.name]}/>
-        )}
+      <div>
+        <div>
+          <input></input>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap'}}>
+          {data.pokemon_species.map((species) =>
+            <PokemonCard key={species.name} metadata={pokemon[species.name]}/>
+          )}
+        </div>
       </div>
     );
   }

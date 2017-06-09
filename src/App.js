@@ -1,19 +1,26 @@
 import React, { Component } from 'react';
+import {
+  HashRouter as Router,
+  Route,
+  Link
+} from 'react-router-dom'
+
 import { Card, Input } from 'antd';
 import pokemon from 'pokemon-metadata';
 import PropTypes from 'prop-types';
 
 import './App.css';
-import data from './data.json';
 
 const Search = Input.Search;
 
 class PokemonCard extends Component {
   render() {
+    const { name, id, sprites } = this.props.metadata;
     return (
-      <Card title={this.props.metadata.name} extra={this.props.metadata.id} style={{ width: 200, margin: '10px' }}>
+      <Card title={name} extra={id} style={{ width: 200, margin: '10px' }}>
         <div style={{display: 'flex', justifyContent: 'center'}}>
-          <img src={this.props.metadata.sprites.front_default} alt={this.props.metadata.name} ></img>
+          <img src={sprites.front_default} alt={name} ></img>
+          <Link to={`/${name}`}>More</Link>
         </div>
       </Card>
     )
@@ -23,43 +30,68 @@ class PokemonCard extends Component {
 PokemonCard.propTypes = {
   metadata: PropTypes.shape({
     name: PropTypes.string,
-    id: PropTypes.string,
+    id: PropTypes.number,
     sprites: PropTypes.shape({
       front_default: PropTypes.string
     })
   })
 }
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {search: ''};
-  }
+const Body = (props) => {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap'}}>
+      {props.filteredData
+        .map((species) => <PokemonCard key={species.name} metadata={pokemon[species.name]}/>)
+      }
+    </div>
+  )}
 
-  onTextChange = (event) => {
-    this.setState({search: event.target.value});
-  }
-
-  render() {
-    return (
-      <div>
-        <div>
-          <Search
-            placeholder="input pokemon search text"
-            style={{ width: 200 }}
-            onSearch={value => console.log(value)}
-            onChange={this.onTextChange}
-            />
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap'}}>
-          {data.pokemon_species
-            .filter((species) => species.name.includes(this.state.search))
-            .map((species) => <PokemonCard key={species.name} metadata={pokemon[species.name]}/>)
-          }
-        </div>
-      </div>
-    );
-  }
+const Show = (props) => {
+  const metadata = pokemon[props.match.url.replace('/', '')]
+  return (
+    <div>{metadata.id}</div>
+  )
 }
 
-export default App;
+  class App extends Component {
+    constructor(props) {
+      super(props);
+      this.state = { search: '', data: [] };
+    }
+
+    componentWillMount() {
+      fetch('https://pokeapi.co/api/v2/generation/1/').then((response) => {
+        response.json().then((data) => {
+          this.setState({data: data.pokemon_species});
+        })
+      })
+    }
+
+    onTextChange = (event) => {
+      this.setState({search: event.target.value});
+    }
+
+    render() {
+      const filteredData = this.state.data.filter((species) => species.name.includes(this.state.search));
+      return (
+        <Router>
+          <div>
+            <div>
+              <Search
+                placeholder="input pokemon search text"
+                style={{ width: 200 }}
+                onSearch={value => console.log(value)}
+                onChange={this.onTextChange}
+                />
+            </div>
+            <Route exact path='/' render={() => (
+                <Body filteredData={filteredData} />
+              )}/>
+            <Route path='/:pokemonName' component={Show} />
+            </div>
+          </Router>
+        );
+      }
+    }
+
+    export default App;

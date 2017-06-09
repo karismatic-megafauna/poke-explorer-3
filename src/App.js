@@ -49,7 +49,7 @@ const Body = (props) => {
 const Show = (props) => {
   const metadata = pokemon[props.match.url.replace('/', '')]
   return (
-    <div>{metadata.id}</div>
+    <img src={metadata.sprites.front_default} alt={metadata.name} />
   )
 }
 
